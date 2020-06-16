@@ -13,9 +13,6 @@ else:
     from PySide2 import QtCore, QtUiTools, QtGui
     from PySide2.QtGui import *
     from PySide2.QtWidgets import *
-    # from PySide2 import QtWidgets
-    # from PySide2 import QtCore as QtCore
-    # from PySide2 import QtUiTools
 
 # Global Variables
 tb_path = os.path.dirname(os.path.realpath(__file__))
@@ -23,16 +20,18 @@ ui_path = os.path.join(tb_path, 'UI', 'RenameSequence.ui')
 
 
 class RenameSequenceUI(QMainWindow):
-    def __init__(self, parent=QApplication.activeWindow()):
+    def __init__(self, source, start, last, parent=QApplication.activeWindow()):
         super(RenameSequenceUI, self).__init__(parent)
 
-        self.source_file = nuke.selectedNodes()[0]['file'].value()
+        self.source_file = source
+        self.start = start
+        self.last = last
         self.ext = os.path.splitext(self.source_file)[1]
         self.src_fdr = os.path.dirname(self.source_file)
+        self.src_file_name = None
+        self.src_padding = None
+        self.src_delimiter = None
         self.newFdr = self.src_fdr
-        self.start = int(nuke.selectedNode()['first'].value())
-        self.last = int(nuke.selectedNode()['last'].value())
-        self.progressText = "TEST"
         # Load the UI
         ui_loader = QtUiTools.QUiLoader()
 
@@ -51,17 +50,12 @@ class RenameSequenceUI(QMainWindow):
         self.define_connections()
         self.panel_control()
 
-        # self.progressBar = QProgressBar(self)
-        #
-        # self.progressBar.setGeometry(250, 313, 300, 25)
-        # print self.ui_main.y()
-        # # self.btnStart = QPushButton('Start', self)
+        self.progressBar = self.ui_main.PGB_ProgressBar
 
     def close_ui(self):
         self.close()
 
     def setup_ui(self):
-        self.progressBar = self.ui_main.PGB_ProgressBar
         self.progressBar.setValue(0)
 
         self.source_file = nuke.selectedNodes()[0]['file'].value()
@@ -73,8 +67,8 @@ class RenameSequenceUI(QMainWindow):
         src_file_name = os.path.splitext(src_file_name)[0]
         # print src_file_name
         # print re.search(".%\d+d", src_file_name)
-        if re.search(".%\d+d", src_file_name):
-            src_padding = re.search(".%\d+d", src_file_name).group()
+        if re.search("\W%\d+d", src_file_name):
+            src_padding = re.search("\W%\d+d", src_file_name).group()
             self.src_padding = re.findall("%\d+d", src_padding)[0]
             self.src_delimiter = src_padding.split(self.src_padding)[0]
         elif "#" in os.path.splitext(src_file_name)[0]:
@@ -83,13 +77,8 @@ class RenameSequenceUI(QMainWindow):
                 if letter == "#":
                     i += 1
             self.src_padding = "#" * i
+            self.src_delimiter = self.src_padding.split(self.src_padding)[0]
 
-        else:
-            src_padding = "None"
-            self.src_padding = "None"
-            self.src_delimiter = "None"
-
-        # print src_file_name.split(self.src_padding)
         self.src_file_name = src_file_name.split(self.src_delimiter + self.src_padding)[0]
         self.ui_main.TXT_SrcFileName.setText(self.src_file_name)
         self.ui_main.TXT_SrcDelimiter.setText(self.src_delimiter)
@@ -157,7 +146,7 @@ class RenameSequenceUI(QMainWindow):
         self.newFileName = self.ui_main.TXT_NewFileName.text()
         self.newDelimiter = self.ui_main.TXT_NewDelimiter.text()
         self.newPadding = self.ui_main.TXT_NewPadding.text()
-        print self.newPadding
+        # print self.newPadding
 
         if not re.search("%\d+d", self.newPadding):
             # print re.search("%\d+d", self.newPadding)
@@ -261,6 +250,9 @@ class RenameSequenceUI(QMainWindow):
     def run_action(self):
         thread = threading.Thread(None, self.rename_action())
         thread.start()
+
+    def run_cmd(self, destination, delimiter, padding):
+        print destination
 
     def notify_dialog(self, title, message, action_yes):
         msg_dialog = QMessageBox()

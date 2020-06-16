@@ -12,5 +12,8 @@ def renameSequence():
 	if len(nuke.selectedNodes()) != 1 or nuke.selectedNode().Class() != 'Read':
 		nuke.message('Please select one Read node.')
 		return
-	window = rename_sequence.RenameSequenceUI()
+	source_file = nuke.selectedNodes()[0]['file'].value()
+	start = int(nuke.selectedNode()['first'].value())
+	last = int(nuke.selectedNode()['last'].value())
+	window = rename_sequence.RenameSequenceUI(source_file, start, last)
 	window.open()
