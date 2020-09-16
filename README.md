@@ -1,10 +1,12 @@
 # RenameSequence
 My own sequence renaming tool in Nuke
 
-How To Install
+How To Install:
+
 Put the two files and the icon file into your user .nuke folder
 
-How To Use
+How To Use:
+
 You will see a Rename tool icon on the menubar, go into it, click on the Rename Sequence while selecting a node to see the hot boxes appear.
 
 The source file name displays in the source area into three setions: file name, delimiter and padding. 
