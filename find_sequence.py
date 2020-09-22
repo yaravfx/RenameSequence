@@ -18,29 +18,31 @@ class findSequence:
         print the list of sequences
         :return:
         """
-        self.compare_files()
-        # print self.sequenceDict
+        self.get_sequences()
 
         for key, value in self.sequenceDict.items():
             value.sort()
             if len(value) > 1:
                 print "{} {}    {}-{}".format(len(value), key, value[0][0], value[-1][0])
-            else:
+            else:  # single frame files
                 print "{} {}".format(len(value), key)
 
-    def compare_files(self):
+    def get_sequences(self):
         """
+        generates two lists of potenial names based on the numbers in the filename.
         compare between the one file and the next file until the second last file in the folder.
-        :return:
+        the correct sequence name should be the same as the potential name of the next frame file.
+
+        :return: a dictionary of sequence name and the value of a lists of frame numbers list,
+        for single frame files the value is a list of itself.
         """
         files = []
         for f in os.listdir(self.fdrPath):
             if os.path.isfile(os.path.join(self.fdrPath, f)):
                 files.append(f)
         files.sort()
-
         for index, filename in enumerate(files):
-            print filename
+            found_name = False  # use this to found the last frame file
             if index < len(files) - 1:
                 frame_numbers = self.find_numbers(filename)
                 next_frame_numbers = self.find_numbers(files[index+1])
@@ -48,12 +50,9 @@ class findSequence:
                     self.sequenceDict[filename] = [filename]
                     continue
 
-                print "here"
                 potential_name = []
                 for n in frame_numbers:
                     potential_name.append(self.get_sequence_info(filename, n))
-                print "potential name: ", potential_name
-
                 first_frame_numbers = {}  # the first frame will be missed, so i'll add it later
                 for n in frame_numbers:
                     first_frame_numbers[self.get_sequence_info(filename, n)] = n
@@ -61,9 +60,10 @@ class findSequence:
                 frame_coverage = []
                 for n in next_frame_numbers:
                     # for name in potential_name:
-                    print self.get_sequence_info(files[index+1], n)
-                    if self.get_sequence_info(files[index+1], n) in potential_name:
-                        sequence_name = self.get_sequence_info(files[index+1], n)
+                    next_frame_name = self.get_sequence_info(files[index+1], n)
+                    if next_frame_name in potential_name:
+                        sequence_name = next_frame_name
+                        found_name = True
                         if sequence_name not in self.sequenceDict.keys():
                             self.sequenceDict[sequence_name] = frame_coverage
                         self.sequenceDict[sequence_name].append(n)
@@ -73,19 +73,32 @@ class findSequence:
                                 if frames not in self.sequenceDict[sequence]:
                                     self.sequenceDict[sequence].append(frames)
 
+                for name in potential_name:  # this will include the last frame of the sequence
+                    if name in self.sequenceDict.keys():
+                        found_name = True
 
+                if not found_name:
+                    # include the left over files,
+                    # which should be the single frame file with a number in the name
+                    self.sequenceDict[filename] = [filename]
 
     def get_sequence_info(self, filename, frame_numbers):
+        """
+        prints the sequence info in a format based on the numbers that are found in the name
+        :param filename: denoise_v001_test_01.047.exr
+        :param frame_numbers: [47, 3, 21, 24]/[1, 3, 9, 12]
+        :return:denoise_v001_test_01.%03d.exr/denoise_v%03d_test_01.047.exr
+        """
         start_i = frame_numbers[2]
         last_i = frame_numbers[3]
         return "{}%0{}d{}".format(filename[:start_i], frame_numbers[1], filename[last_i:])
 
     def find_numbers(self, frame_name):
         """
-        get a list of all the numbers in the file name. returns a list consists of list of the number itself,
-        the length of the number, the start index and end index of the number.
-        :param frame_name: "denoise_test_1_v002.028.exr"
-        :return: [[1, 1, 13, 14], [2, 3, 16, 19], [28, 3, 20, 23]]
+        get a list of all the numbers in the file name. this will be used to create potential names of the sequence
+        [number, length, start index, end index]
+        :param frame_name: "denoise_v001_test_01.047.exr"
+        :return: [[1, 3, 9, 12], [1, 2, 18, 20], [47, 3, 21, 24]]
         """
         numbers = []
         for digits in re.finditer("\d+", frame_name):
@@ -98,27 +111,21 @@ class findSequence:
         return numbers
 
 # fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\denoise_02"
-# fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\\test_01"
-# fdr_path = "D:/PERSONAL_PROJECT/LJTX_E01_S04C081/precomp/test_05/"
-fdr_path = "D:/Python_Project/test_lss/"
+# # fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\\test_01"
+# # fdr_path = "D:/PERSONAL_PROJECT/LJTX_E01_S04C081/precomp/test_05/"
+# # fdr_path = "D:/Python_Project/test_lss/"
+#
+# start = time.time()
+# job = findSequence(fdr_path)
+# job.lss()
+# # print time.time() - start  # calculate time
 
-start = time.time()
-job = findSequence(fdr_path)
-job.lss()
-print
-print time.time() - start
-#
-# if job.find_numbers('alpha.txt'):
-#     print True
-# else:
-#     print False
-# print job.sequenceDict
 
-# if __name__ == "__main__":
-#
-#     parser = argparse.ArgumentParser(description="Finding sequences of files")
-#     parser.add_argument('folder', metavar='F', type=str, help='Folder path')
-#
-#     args = parser.parse_args()
-#     job = findSequence(args.folder)
-#     job.lss()
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Finding sequences of files")
+    parser.add_argument('folder', metavar='F', type=str, help='Folder path')
+
+    args = parser.parse_args()
+    job = findSequence(args.folder)
+    job.lss()
