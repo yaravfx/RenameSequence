@@ -2,13 +2,10 @@
 
 import argparse
 import os
-import difflib
 import re
-import numbers
-import time
 
 
-class findSequence:
+class FindSequence:
     def __init__(self, fdrPath):
         self.fdrPath = fdrPath
         self.sequenceDict = {}
@@ -23,9 +20,33 @@ class findSequence:
         for key, value in self.sequenceDict.items():
             value.sort()
             if len(value) > 1:
-                print "{} {}    {}-{}".format(len(value), key, value[0][0], value[-1][0])
+                # if there's missing frames
+                missing_frames = self.find_missing_frame(value)
+                if missing_frames:
+                    print "{}  {}    {}-{}-{}".format(len(value), key, value[0][0], "-".join(missing_frames), value[-1][0])
+                else:
+                    print "{}  {}    {}-{}".format(len(value), key, value[0][0], value[-1][0])
             else:  # single frame files
-                print "{} {}".format(len(value), key)
+                print "{}  {}".format(len(value), key)
+
+    def find_missing_frame(self, frame_numbers):
+        missing_frames = []
+        count = 0
+        for index, frames in enumerate(frame_numbers):
+            if index < len(frame_numbers) - 1:
+                # print index
+                frame = frames[0]
+                # print frame
+                if frame_numbers[index+1][0] - frame != 1:
+                    lst = []
+                    # print "missing frame"
+                    count += 1
+                    # print frame, frame_numbers[index+1][0]
+                    lst.append(str(frame))
+                    lst.append(str(frame_numbers[index+1][0]))
+                    missing_string = "{} {}".format(str(frame), str(frame_numbers[index+1][0]))
+                    missing_frames.append(missing_string)
+        return missing_frames
 
     def get_sequences(self):
         """
@@ -111,15 +132,11 @@ class findSequence:
         return numbers
 
 # fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\denoise_02"
-# # fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\\test_01"
-# # fdr_path = "D:/PERSONAL_PROJECT/LJTX_E01_S04C081/precomp/test_05/"
-# # fdr_path = "D:/Python_Project/test_lss/"
-#
-# start = time.time()
-# job = findSequence(fdr_path)
-# job.lss()
-# # print time.time() - start  # calculate time
+# fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\\test_01"
+# fdr_path = "D:/Python_Project/test_lss/"
 
+# job = FindSequence(fdr_path)
+# job.lss()
 
 if __name__ == "__main__":
 
@@ -127,5 +144,5 @@ if __name__ == "__main__":
     parser.add_argument('folder', metavar='F', type=str, help='Folder path')
 
     args = parser.parse_args()
-    job = findSequence(args.folder)
+    job = FindSequence(args.folder)
     job.lss()
