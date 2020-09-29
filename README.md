@@ -1,5 +1,8 @@
 # RenameSequence
 My own sequence renaming tool in Nuke
+Here's a screenshot of how it looks like: 
+![Image of Yaktocat](https://user-images.githubusercontent.com/44877614/94612148-8c0cee00-0257-11eb-88db-a0fecc274554.png)
+
 
 How To Install:
 
