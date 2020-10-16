@@ -9,6 +9,7 @@ class FindSequence:
     def __init__(self, fdrPath):
         self.fdrPath = fdrPath
         self.sequenceDict = {}
+        self.sequenceList = []
 
     def lss(self):
         """
@@ -57,10 +58,8 @@ class FindSequence:
         :return: a dictionary of sequence name and the value of a lists of frame numbers list,
         for single frame files the value is a list of itself.
         """
-        files = []
-        for f in os.listdir(self.fdrPath):
-            if os.path.isfile(os.path.join(self.fdrPath, f)):
-                files.append(f)
+        files = [f for f in os.listdir(self.fdrPath) if os.path.isfile(os.path.join(self.fdrPath, f))]
+
         files.sort()
         for index, filename in enumerate(files):
             found_name = False  # use this to found the last frame file
@@ -134,9 +133,6 @@ class FindSequence:
 # fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\denoise_02"
 # fdr_path = "D:\PERSONAL_PROJECT\LJTX_E01_S04C081\precomp\\test_01"
 # fdr_path = "D:/Python_Project/test_lss/"
-
-# job = FindSequence(fdr_path)
-# job.lss()
 
 if __name__ == "__main__":
 
